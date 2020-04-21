@@ -1,7 +1,6 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
 
-// create the connection information for the sql database
 var connection = mysql.createConnection({
     host: "localhost",
 
@@ -13,13 +12,11 @@ var connection = mysql.createConnection({
     database: "employeeTracker_DB"
 });
 
-// connect to the mysql server and sql database
 connection.connect(function (err) {
     if (err) throw err;
-    // run the start function after the connection is made to prompt the user
     start();
 });
-
+//function to start user prompt questions
 function start() {
     inquirer
         .prompt({
@@ -63,7 +60,7 @@ function start() {
             }
         });
 }
-
+//simple view functions
 function viewDepartments() {
     connection.query("SELECT * FROM department", function (err, results) {
         if (err) throw err;
@@ -87,7 +84,7 @@ function viewEmployees() {
         start();
     })
 }
-
+//add functions
 function addDepartment() {
     inquirer.prompt([
         {
@@ -95,7 +92,7 @@ function addDepartment() {
             type: "input",
             message: "What department would you like to add?"
         }
-    ])
+    ])// wait for user input, then use input to create new table row
         .then(function (answer) {
             connection.query(
                 "INSERT INTO department SET ?",
@@ -140,7 +137,7 @@ function addRole() {
                 "Legal"
             ]
         }
-    ])
+    ])// this function needs extra query to get id from department name
         .then(function (answer) {
             connection.query("SELECT id FROM department WHERE name = ?",
                 [answer.newRoleDept], function (err, results) {
@@ -207,7 +204,7 @@ function addEmployee() {
             [answer.newEmpRole], function (err, results) {
                 if (err) throw err;
                 let newEmpRoleId = results[0].id;
-
+                // this function is like addRole but also needs if/else statement to handle case of no manager
                 if (answer.manager = "None") {
                     insertEmployee(answer, newEmpRoleId, null);
                 } else {
@@ -224,7 +221,7 @@ function addEmployee() {
         )
     })
 }
-
+//separated insert function in this case for clarity, as it was called twice above
 function insertEmployee(employeeData, newEmpRoleId, newEmpManagerId) {
     connection.query(
         "INSERT INTO employee SET ?",
@@ -273,21 +270,23 @@ function updateRole() {
             ]
         }
     ]).then(function (answer) {
+        //same logic to get id from role
         connection.query("SELECT id FROM role WHERE title = ?",
             [answer.whichRole], function (err, results) {
                 if (err) throw err;
                 let whichRoleId = results[0].id;
+                //then set new role targeting user choice employee (input = last_name)
                 connection.query(
                     "UPDATE employee SET ? WHERE ?", [
-                        {
-                            role_id: whichRoleId
-                        },
-                        {
-                            last_name: answer.whichEmp
-                        }
+                    {
+                        role_id: whichRoleId
+                    },
+                    {
+                        last_name: answer.whichEmp
+                    }
 
-                    ],
-                   
+                ],
+
                     function (err) {
                         if (err) throw err;
                         console.log("Your role was updated successfully!");
