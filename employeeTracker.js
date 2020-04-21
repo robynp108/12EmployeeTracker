@@ -241,3 +241,60 @@ function insertEmployee(employeeData, newEmpRoleId, newEmpManagerId) {
         }
     );
 }
+
+function updateRole() {
+    inquirer.prompt([
+        {
+            name: "whichEmp",
+            type: "list",
+            message: "Which employee would you like to update?",
+            choices: [
+                "Rodriguez",
+                "Doe",
+                "Lourd",
+                "Tupik",
+                "Chan",
+                "Allen",
+                "Brown"
+            ]
+        },
+        {
+            name: "whichRole",
+            type: "list",
+            message: "What will their new role be?",
+            choices: [
+                "Lead Engineer",
+                "Software Engineer",
+                "Sales Lead",
+                "Salesperson",
+                "Accountant",
+                "Legal Team Lead",
+                "Lawyer"
+            ]
+        }
+    ]).then(function (answer) {
+        connection.query("SELECT id FROM role WHERE title = ?",
+            [answer.whichRole], function (err, results) {
+                if (err) throw err;
+                let whichRoleId = results[0].id;
+                connection.query(
+                    "UPDATE employee SET ? WHERE ?", [
+                        {
+                            role_id: whichRoleId
+                        },
+                        {
+                            last_name: answer.whichEmp
+                        }
+
+                    ],
+                   
+                    function (err) {
+                        if (err) throw err;
+                        console.log("Your role was updated successfully!");
+                        start();
+                    }
+                );
+            }
+        )
+    })
+}
