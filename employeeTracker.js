@@ -67,7 +67,7 @@ function start() {
 function viewDepartments() {
     connection.query("SELECT * FROM department", function (err, results) {
         if (err) throw err;
-        console.log(results);
+        console.table(results);
         start();
     })
 }
@@ -75,7 +75,7 @@ function viewDepartments() {
 function viewRoles() {
     connection.query("SELECT * FROM role", function (err, results) {
         if (err) throw err;
-        console.log(results);
+        console.table(results);
         start();
     })
 }
@@ -83,7 +83,7 @@ function viewRoles() {
 function viewEmployees() {
     connection.query("SELECT * FROM employee", function (err, results) {
         if (err) throw err;
-        console.log(results);
+        console.table(results);
         start();
     })
 }
@@ -190,69 +190,54 @@ function addEmployee() {
                 "Legal Team Lead",
                 "Lawyer"
             ]
+        },
+        {
+            name: "newEmpManager",
+            type: "list",
+            message: "Who is the employee's manager?",
+            choices: [
+                "None",
+                "Rodriguez",
+                "Doe",
+                "Lourd"
+            ]
         }
-    ])
-        .then(function (answer) {
-            connection.query("SELECT id FROM role WHERE name = ?",
-                [answer.newEmpRole], function (err, results) {
-                    if (err) throw err;
-                    let newEmpRoleId = results[0].id;
+    ]).then(function (answer) {
+        connection.query("SELECT id FROM role WHERE title = ?",
+            [answer.newEmpRole], function (err, results) {
+                if (err) throw err;
+                let newEmpRoleId = results[0].id;
 
-                    connection.query(
-                        "INSERT INTO employee SET ?",
-                        {
-                            first_name: answer.newFirstName,
-                            last_name: answer.newLastName,
-                            role_id: newEmpRoleId,
-                            manager_id: NULL
-                        },
-                        function (err) {
+                if (answer.manager = "None") {
+                    insertEmployee(answer, newEmpRoleId, null);
+                } else {
+                    connection.query("SELECT id FROM employee WHERE last_name = ?",
+                        [answer.newEmpManager], function (err, results) {
                             if (err) throw err;
+                            let newEmpManagerId = results[0].id;
+
+                            insertEmployee(employeeData, newEmpRoleId, newEmpManagerId);
                         }
                     );
                 }
-            );
-
-        })
-        .then(function (answer) {
-            inquirer.prompt([
-                {
-                    name: "newEmpManager",
-                    type: "list",
-                    message: "Who is the employee's manager?",
-                    choices: [
-                        "None",
-                        "Ashley Rodriguez",
-                        "John Doe",
-                        "Sarah Lourd"
-                    ]
-                }
-            ])
-            if (answer.newEmpManager = "None") {
-                console.log("Your role was created successfully!");
-                start();
-            } else {
-                connection.query("SELECT id FROM employee WHERE name = ?",
-                    [answer.newEmpManager], function (err, results) {
-                        if (err) throw err;
-                        let newEmpManagerId = results[0].id;
-
-                        connection.query(
-                            "INSERT INTO employee SET ?",
-                            {
-                                first_name: answer.newFirstName,
-                                last_name: answer.newLastName,
-                                role_id: newEmpRoleId,
-                                manager_id: newEmpManagerId
-                            },
-                            function (err) {
-                                if (err) throw err;
-                                console.log("Your role was created successfully!");
-                                start();
-                            }
-                        );
-                    }
-                );
             }
-        });
+        )
+    })
+}
+
+function insertEmployee(employeeData, newEmpRoleId, newEmpManagerId) {
+    connection.query(
+        "INSERT INTO employee SET ?",
+        {
+            first_name: employeeData.newFirstName,
+            last_name: employeeData.newLastName,
+            role_id: newEmpRoleId,
+            manager_id: newEmpManagerId
+        },
+        function (err) {
+            if (err) throw err;
+            console.log("Your role was created successfully!");
+            start();
+        }
+    );
 }
